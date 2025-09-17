@@ -1,11 +1,11 @@
 <template>
     <header class="bg-white shadow">
-        <div class="flex flex-wrap justify-between items-center max-w-6xl mx-auto px-4 py-6">
-            <div>
+        <div class="flex flex-wrap justify-center md:justify-between items-center max-w-6xl mx-auto px-4 py-6">
+            <div lass="w-full md:w-auto">
                 <img class="w-52" src="https://signi.com/wp-content/themes/signi/img/logo.svg" alt="" />
             </div>
 
-            <div class="text-right">
+            <div class="w-full md:w-auto text-center md:text-left mt-4 md:mt-0">
                 <h1 class="text-xl font-bold gradient-title">Signi Dictionary App</h1>
                 <p class="text-gray-400 text-sm">v.1.0.0 ~ v databázi je ~ {{ words.length }} slov</p>
             </div>
@@ -49,7 +49,7 @@ const debouncedSearchFn = useDebounceFn(value => {
     debouncedSearch.value = value;
 }, 350);
 
-const words = shallowRef([]);
+const words = ref([]);
 const wordsStorage = useLocalStorage('dictionary-words', []);
 
 const filteredWords = computed(() => {
@@ -99,7 +99,6 @@ const editWord = (id, newText) => {
 
 const updateWords = newWords => {
     words.value = newWords;
-    wordsStorage.value = [...newWords];
 };
 
 const saveDragChanges = () => {
