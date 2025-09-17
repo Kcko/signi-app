@@ -28,7 +28,7 @@
                 <p class="mt-4 text-gray-600">Načítání slov...</p>
             </div>
 
-            <WordList v-else :words="filteredWords" :is-searching="!!debouncedSearch.trim()" :search-query="debouncedSearch" @update-words="updateWords" @delete-word="deleteWord" @edit-word="editWord" @reorder-words="reorderWords" @save-drag-changes="saveDragChanges" />
+            <WordList v-else :words="filteredWords" :is-searching="!!debouncedSearch.trim()" :search-query="debouncedSearch" @update-words="updateWords" @delete-word="deleteWord" @edit-word="editWord" @save-drag-changes="saveDragChanges" />
         </main>
     </div>
 </template>
@@ -48,9 +48,6 @@ const debouncedSearchFn = useDebounceFn(value => {
     debouncedSearch.value = value;
 }, 300);
 
-const debouncedDragSave = useDebounceFn(newWords => {
-    wordsStorage.value = newWords;
-}, 200);
 
 const words = shallowRef([]);
 const wordsStorage = useLocalStorage('dictionary-words', []);
@@ -59,7 +56,6 @@ const filteredWords = computed(() => {
     if (!debouncedSearch.value.trim()) return words.value;
     const query = debouncedSearch.value.toLowerCase();
 
-    // Optimalizované vyhledávání s early exit
     const results = [];
     for (let i = 0; i < words.value.length; i++) {
         const word = words.value[i];
@@ -103,35 +99,14 @@ const editWord = (id, newText) => {
 
 const updateWords = newWords => {
     words.value = newWords;
-    // Uložení pouze na konci drag operace, ne během
-    // debouncedDragSave(newWords);
-};
-
-const reorderWords = ({ oldIndex, newIndex }) => {
-    // Pokud je aktivní vyhledávání, nepřeřazujeme
-    if (debouncedSearch.value.trim()) {
-        console.warn('Drag & drop není možný při aktivním vyhledávání');
-        return;
-    }
-
-    // Optimalizované přeřazení bez zbytečného kopírování
-    const wordsCopy = [...words.value];
-    const [movedWord] = wordsCopy.splice(oldIndex, 1);
-    wordsCopy.splice(newIndex, 0, movedWord);
-
-    words.value = wordsCopy;
-    // localStorage vypnutý pro testování drag & drop performance
-    // wordsStorage.value = wordsCopy;
 };
 
 const saveDragChanges = () => {
-    // Asynchronní uložení do localStorage s requestIdleCallback
     if (window.requestIdleCallback) {
         requestIdleCallback(() => {
             wordsStorage.value = words.value;
         });
     } else {
-        // Fallback pro starší prohlížeče
         setTimeout(() => {
             wordsStorage.value = words.value;
         }, 0);

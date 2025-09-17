@@ -71,7 +71,6 @@ const cancelEdit = () => {
 };
 
 const handleDelete = () => {
-    // Odstranění confirm dialogu pro rychlejší mazání
     emit('delete');
 };
 </script>

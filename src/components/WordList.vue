@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick } from 'vue';
+import { computed } from 'vue';
 import VirtualList from 'vue-virtual-sortable';
 import WordItem from './WordItem.vue';
 
@@ -39,11 +39,10 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['update-words', 'delete-word', 'edit-word', 'reorder-words', 'save-drag-changes']);
+const emit = defineEmits(['update-words', 'delete-word', 'edit-word', 'save-drag-changes']);
 
 const isDragDisabled = computed(() => props.isSearching);
 
-// Computed s getter/setter pro v-model
 const localWords = computed({
     get() {
         return props.words;
@@ -63,7 +62,6 @@ const handleEdit = (id, newText) => {
 };
 
 const handleDrop = () => {
-    // Emit pro uložení po skončení drag operace
     emit('save-drag-changes');
 };
 </script>
