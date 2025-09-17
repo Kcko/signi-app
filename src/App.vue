@@ -77,7 +77,7 @@ const addWord = () => {
     };
 
     words.value.unshift(newWordObj);
-    wordsStorage.value = words.value;
+    wordsStorage.value = [...words.value];
     newWord.value = '';
 };
 
@@ -85,7 +85,7 @@ const deleteWord = id => {
     const index = words.value.findIndex(word => word.id === id);
     if (index !== -1) {
         words.value.splice(index, 1);
-        wordsStorage.value = words.value;
+        wordsStorage.value = [...words.value];
     }
 };
 
@@ -93,22 +93,23 @@ const editWord = (id, newText) => {
     const wordIndex = words.value.findIndex(word => word.id === id);
     if (wordIndex !== -1) {
         words.value[wordIndex].text = newText;
-        wordsStorage.value = words.value;
+        wordsStorage.value = [...words.value];
     }
 };
 
 const updateWords = newWords => {
     words.value = newWords;
+    wordsStorage.value = [...newWords];
 };
 
 const saveDragChanges = () => {
     if (window.requestIdleCallback) {
         requestIdleCallback(() => {
-            wordsStorage.value = words.value;
+            wordsStorage.value = [...words.value];
         });
     } else {
         setTimeout(() => {
-            wordsStorage.value = words.value;
+            wordsStorage.value = [...words.value];
         }, 0);
     }
 };
