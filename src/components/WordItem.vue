@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-gray-50 border border-gray-200 rounded-lg px-5 py-1 word-item group">
+    <div class="bg-gray-50 border border-gray-200 hover:bg-purple-50 rounded-lg px-5 py-1 word-item group">
         <div v-if="!isEditing" class="flex items-center justify-between">
             <div class="flex-1 mr-6">
                 <span class="text-gray-800 font-medium truncate block">{{ word.text }}</span>

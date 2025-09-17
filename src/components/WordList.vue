@@ -120,4 +120,3 @@ body.dragging * {
     cursor: grabbing !important;
 }
 </style>
-

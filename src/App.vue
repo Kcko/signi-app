@@ -2,11 +2,12 @@
     <header class="bg-white shadow">
         <div class="flex flex-wrap justify-between items-center max-w-6xl mx-auto px-4 py-6">
             <div>
-                <h1 class="text-3xl font-bold gradient-title">Signi Dictionary App</h1>
-                <p class="text-gray-600 mt-2">v databázi je ~ {{ words.length }} slov</p>
+                <img class="w-52" src="https://signi.com/wp-content/themes/signi/img/logo.svg" alt="" />
             </div>
-            <div>
-                <img src="https://signi.com/wp-content/themes/signi/img/logo.svg" alt="" />
+
+            <div class="text-right">
+                <h1 class="text-xl font-bold gradient-title">Signi Dictionary App</h1>
+                <p class="text-gray-400 text-sm">v.1.0.0 ~ v databázi je ~ {{ words.length }} slov</p>
             </div>
         </div>
     </header>
