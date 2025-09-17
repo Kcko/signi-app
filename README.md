@@ -14,7 +14,7 @@ Single-page aplikace ve Vue 3 s Tailwind CSS 4 pro správu osobního slovníku s
 ## 🛠 Technologie
 
 -   **Vue 3** (Composition API, script setup)
--   **Tailwind CSS 4** (alpha verze)
+-   **Tailwind 3** -
 -   **Vite** (build tool)
 -   **VueDraggable** (drag & drop funkcionalita)
 -   **VueUse** (utility composables)

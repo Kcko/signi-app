@@ -46,8 +46,7 @@ const debouncedSearch = ref('');
 
 const debouncedSearchFn = useDebounceFn(value => {
     debouncedSearch.value = value;
-}, 300);
-
+}, 350);
 
 const words = shallowRef([]);
 const wordsStorage = useLocalStorage('dictionary-words', []);
@@ -117,15 +116,11 @@ watch(searchQuery, newValue => {
     debouncedSearchFn(newValue);
 });
 
-onMounted(async () => {
+onMounted(() => {
     if (wordsStorage.value.length === 0) {
-        try {
-            const generatedWords = await generateWords(10000);
-            words.value = generatedWords;
-            wordsStorage.value = generatedWords;
-        } catch (error) {
-            console.error('Chyba při načítání slov:', error);
-        }
+        const generatedWords = generateWords(10000);
+        words.value = generatedWords;
+        wordsStorage.value = generatedWords;
     } else {
         words.value = [...wordsStorage.value];
     }

@@ -7,7 +7,7 @@
                 </p>
             </div>
             <div v-else class="words-container">
-                <VirtualList v-model="localWords" :dataKey="'id'" :handle="'.word-item'" :disabled="isDragDisabled" class="virtual-list" style="height: 100%" @drop="handleDrop">
+                <VirtualList v-model="localWords" :dataKey="'id'" :handle="'.drag-handle'" :disabled="isDragDisabled" class="virtual-list" style="height: 100%" @drop="handleDrop">
                     <template v-slot:item="{ record, index, dataKey }">
                         <div class="word-item">
                             <WordItem :word="record" @delete="handleDelete(record.id)" @edit="handleEdit(record.id, $event)" />
@@ -83,11 +83,14 @@ const handleDrop = () => {
 }
 
 .word-item {
-    cursor: grab;
     margin-bottom: 8px;
 }
 
-.word-item:active {
+.drag-handle {
+    cursor: grab;
+}
+
+.drag-handle:active {
     cursor: grabbing !important;
 }
 
@@ -117,3 +120,4 @@ body.dragging * {
     cursor: grabbing !important;
 }
 </style>
+

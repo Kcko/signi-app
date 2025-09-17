@@ -1,11 +1,16 @@
 <template>
-    <div class="bg-gray-50 border border-gray-200 rounded-lg px-5 py-1 word-item">
-        <div v-if="!isEditing" class="flex items-center justify-between group">
-            <div class="flex-1 mr-2">
+    <div class="bg-gray-50 border border-gray-200 rounded-lg px-5 py-1 word-item group">
+        <div v-if="!isEditing" class="flex items-center justify-between">
+            <div class="flex-1 mr-6">
                 <span class="text-gray-800 font-medium truncate block">{{ word.text }}</span>
                 <!-- <span class="text-gray-400 text-xs">id: {{ word.id }}</span> -->
             </div>
-            <div class="flex gap-1 opacity-0 group-hover:opacity-100">
+            <div class="flex gap-4 opacity-0 group-hover:opacity-100">
+                <button class="drag-handle text-gray-500 hover:text-gray-700 p-1 rounded cursor-grab" title="Přesunout">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
                 <button @click="startEdit" class="text-blue-600 hover:text-blue-800 p-1 rounded" title="Upravit">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
