@@ -28,13 +28,13 @@
                 <p class="mt-4 text-gray-600">Načítání slov...</p>
             </div>
 
-            <WordList v-else :words="filteredWords" :is-searching="!!debouncedSearch.trim()" :search-query="debouncedSearch" @update-words="updateWords" @delete-word="deleteWord" @edit-word="editWord" @reorder-words="reorderWords" />
+            <WordList v-else :words="filteredWords" :is-searching="!!debouncedSearch.trim()" :search-query="debouncedSearch" @update-words="updateWords" @delete-word="deleteWord" @edit-word="editWord" @reorder-words="reorderWords" @save-drag-changes="saveDragChanges" />
         </main>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, shallowRef } from 'vue';
 import { useLocalStorage, useDebounceFn } from '@vueuse/core';
 import WordList from './components/WordList.vue';
 import { generateWords } from './composables/useWords';
@@ -48,12 +48,12 @@ const debouncedSearchFn = useDebounceFn(value => {
     debouncedSearch.value = value;
 }, 300);
 
-const words = ref([]);
-const wordsStorage = useLocalStorage('dictionary-words', []);
-
-const debouncedSave = useDebounceFn(newWords => {
+const debouncedDragSave = useDebounceFn(newWords => {
     wordsStorage.value = newWords;
-}, 500);
+}, 200);
+
+const words = shallowRef([]);
+const wordsStorage = useLocalStorage('dictionary-words', []);
 
 const filteredWords = computed(() => {
     if (!debouncedSearch.value.trim()) return words.value;
@@ -66,8 +66,6 @@ const filteredWords = computed(() => {
         if (word.text.toLowerCase().includes(query)) {
             results.push(word);
         }
-        // Omezit počet výsledků pro lepší výkon
-        if (results.length >= 1000) break;
     }
     return results;
 });
@@ -76,16 +74,14 @@ const addWord = () => {
     const text = newWord.value.trim();
     if (!text) return;
 
-    // Najít nejvyšší ID a přidat 1
-    const maxId = words.value.length > 0 ? Math.max(...words.value.map(w => w.id)) : 0;
-
     const newWordObj = {
-        id: maxId + 1,
+        id: Date.now() + Math.random(),
         text,
         createdAt: new Date().toISOString(),
     };
 
     words.value.unshift(newWordObj);
+    wordsStorage.value = words.value;
     newWord.value = '';
 };
 
@@ -93,6 +89,7 @@ const deleteWord = id => {
     const index = words.value.findIndex(word => word.id === id);
     if (index !== -1) {
         words.value.splice(index, 1);
+        wordsStorage.value = words.value;
     }
 };
 
@@ -100,12 +97,14 @@ const editWord = (id, newText) => {
     const wordIndex = words.value.findIndex(word => word.id === id);
     if (wordIndex !== -1) {
         words.value[wordIndex].text = newText;
+        wordsStorage.value = words.value;
     }
 };
 
 const updateWords = newWords => {
     words.value = newWords;
-    debouncedSave(newWords);
+    // Uložení pouze na konci drag operace, ne během
+    // debouncedDragSave(newWords);
 };
 
 const reorderWords = ({ oldIndex, newIndex }) => {
@@ -121,21 +120,27 @@ const reorderWords = ({ oldIndex, newIndex }) => {
     wordsCopy.splice(newIndex, 0, movedWord);
 
     words.value = wordsCopy;
-    // Okamžité uložení pro drag & drop
-    wordsStorage.value = wordsCopy;
+    // localStorage vypnutý pro testování drag & drop performance
+    // wordsStorage.value = wordsCopy;
+};
+
+const saveDragChanges = () => {
+    // Asynchronní uložení do localStorage s requestIdleCallback
+    if (window.requestIdleCallback) {
+        requestIdleCallback(() => {
+            wordsStorage.value = words.value;
+        });
+    } else {
+        // Fallback pro starší prohlížeče
+        setTimeout(() => {
+            wordsStorage.value = words.value;
+        }, 0);
+    }
 };
 
 watch(searchQuery, newValue => {
     debouncedSearchFn(newValue);
 });
-
-watch(
-    words,
-    newWords => {
-        debouncedSave(newWords);
-    },
-    { deep: false }
-);
 
 onMounted(async () => {
     if (wordsStorage.value.length === 0) {

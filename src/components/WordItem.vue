@@ -1,9 +1,9 @@
 <template>
-    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 word-item">
+    <div class="bg-gray-50 border border-gray-200 rounded-lg px-5 py-1 word-item">
         <div v-if="!isEditing" class="flex items-center justify-between group">
             <div class="flex-1 mr-2">
                 <span class="text-gray-800 font-medium truncate block">{{ word.text }}</span>
-                <span class="text-gray-400 text-xs">id: {{ word.id }}</span>
+                <!-- <span class="text-gray-400 text-xs">id: {{ word.id }}</span> -->
             </div>
             <div class="flex gap-1 opacity-0 group-hover:opacity-100">
                 <button @click="startEdit" class="text-blue-600 hover:text-blue-800 p-1 rounded" title="Upravit">
@@ -78,7 +78,7 @@ const handleDelete = () => {
 
 <style scoped>
 .word-item {
-    min-height: 80px;
+    min-height: 40px;
     display: flex;
     align-items: center;
     width: 100%;
