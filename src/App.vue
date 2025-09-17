@@ -1,17 +1,21 @@
 <template>
-    <div class="min-h-screen bg-gray-50 max-w-6xl mx-auto">
-        <header class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 py-6">
-                <h1 class="text-3xl font-bold text-gray-900">Signi Dictionary App</h1>
+    <header class="bg-white shadow">
+        <div class="flex flex-wrap justify-between items-center max-w-6xl mx-auto px-4 py-6">
+            <div>
+                <h1 class="text-3xl font-bold gradient-title">Signi Dictionary App</h1>
                 <p class="text-gray-600 mt-2">v databázi je ~ {{ words.length }} slov</p>
             </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto px-4 py-8">
+            <div>
+                <img src="https://signi.com/wp-content/themes/signi/img/logo.svg" alt="" />
+            </div>
+        </div>
+    </header>
+    <div class="max-w-6xl mx-auto">
+        <main class="mx-auto px-4 py-8">
             <div class="mb-6">
                 <div class="flex gap-4 mb-4">
                     <input v-model="newWord" @keyup.enter="addWord" type="text" placeholder="Přidat nové slovo..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                    <button @click="addWord" :disabled="!newWord.trim()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Přidat</button>
+                    <button @click="addWord" :disabled="!newWord.trim()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">Přidat</button>
                 </div>
 
                 <div class="flex gap-4 items-center">
@@ -24,7 +28,7 @@
                 <p class="mt-4 text-gray-600">Načítání slov...</p>
             </div>
 
-            <WordList v-else :words="filteredWords" :total-words-count="words.length" @update-words="updateWords" @delete-word="deleteWord" @edit-word="editWord" @reorder-words="reorderWords" />
+            <WordList v-else :words="filteredWords" :is-searching="!!debouncedSearch.trim()" :search-query="debouncedSearch" @update-words="updateWords" @delete-word="deleteWord" @edit-word="editWord" @reorder-words="reorderWords" />
         </main>
     </div>
 </template>
@@ -72,8 +76,11 @@ const addWord = () => {
     const text = newWord.value.trim();
     if (!text) return;
 
+    // Najít nejvyšší ID a přidat 1
+    const maxId = words.value.length > 0 ? Math.max(...words.value.map(w => w.id)) : 0;
+
     const newWordObj = {
-        id: Date.now() + Math.random(),
+        id: maxId + 1,
         text,
         createdAt: new Date().toISOString(),
     };
@@ -102,14 +109,20 @@ const updateWords = newWords => {
 };
 
 const reorderWords = ({ oldIndex, newIndex }) => {
+    // Pokud je aktivní vyhledávání, nepřeřazujeme
+    if (debouncedSearch.value.trim()) {
+        console.warn('Drag & drop není možný při aktivním vyhledávání');
+        return;
+    }
+
     // Optimalizované přeřazení bez zbytečného kopírování
     const wordsCopy = [...words.value];
     const [movedWord] = wordsCopy.splice(oldIndex, 1);
     wordsCopy.splice(newIndex, 0, movedWord);
 
     words.value = wordsCopy;
-    // Debounced save pro optimalizaci
-    debouncedSave(wordsCopy);
+    // Okamžité uložení pro drag & drop
+    wordsStorage.value = wordsCopy;
 };
 
 watch(searchQuery, newValue => {

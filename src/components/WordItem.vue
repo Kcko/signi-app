@@ -1,7 +1,10 @@
 <template>
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 word-item">
         <div v-if="!isEditing" class="flex items-center justify-between group">
-            <span class="text-gray-800 font-medium truncate flex-1 mr-2">{{ word.text }}</span>
+            <div class="flex-1 mr-2">
+                <span class="text-gray-800 font-medium truncate block">{{ word.text }}</span>
+                <span class="text-gray-400 text-xs">id: {{ word.id }}</span>
+            </div>
             <div class="flex gap-1 opacity-0 group-hover:opacity-100">
                 <button @click="startEdit" class="text-blue-600 hover:text-blue-800 p-1 rounded" title="Upravit">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

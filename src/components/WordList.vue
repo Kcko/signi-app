@@ -1,17 +1,14 @@
 <template>
     <div class="bg-white rounded-lg shadow">
-        <div class="p-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Slovník ({{ words.length }} slov)</h2>
-            <p class="text-sm text-gray-600 mt-1">
-                <span v-if="words.length === totalWordsCount"> Zobrazeno všech {{ words.length }} slov • Viděli jste {{ seenWordsCount }} slov </span>
-                <span v-else> Nalezeno {{ words.length }} z {{ totalWordsCount }} slov • Viděli jste {{ seenWordsCount }} slov </span>
-            </p>
-        </div>
-
         <div class="p-4">
-            <div class="words-container" ref="containerRef" @scroll="handleScroll">
+            <div v-if="props.isSearching && props.words.length === 0" class="text-center py-12">
+                <p class="text-gray-600 text-lg">
+                    Pardon, tohle slovo neznám <strong>"{{ props.searchQuery }}"</strong> 😔
+                </p>
+            </div>
+            <div v-else class="words-container" ref="containerRef" @scroll="handleScroll">
                 <div class="virtual-spacer" :style="{ height: `${offsetY}px` }"></div>
-                <VueDraggable v-model="localDisplayedWords" class="words-grid" :animation="0" ghost-class="ghost-item" chosen-class="chosen-item" drag-class="drag-item" @start="handleDragStart" @end="handleDragEnd" :disabled="isDragDisabled" :force-fallback="false" :set-data="() => {}">
+                <VueDraggable v-model="localDisplayedWords" class="words-list" :animation="200" ghost-class="ghost-item" chosen-class="chosen-item" drag-class="drag-item" @start="handleDragStart" @end="handleDragEnd" :disabled="isDragDisabled" :force-fallback="false">
                     <div v-for="word in localDisplayedWords" :key="word.id" class="word-item">
                         <WordItem :word="word" @delete="handleDelete(word.id)" @edit="handleEdit(word.id, $event)" />
                     </div>
@@ -32,9 +29,13 @@ const props = defineProps({
         type: Array,
         required: true,
     },
-    totalWordsCount: {
-        type: Number,
-        required: true,
+    isSearching: {
+        type: Boolean,
+        default: false,
+    },
+    searchQuery: {
+        type: String,
+        default: '',
     },
 });
 
@@ -42,56 +43,40 @@ const emit = defineEmits(['update-words', 'delete-word', 'edit-word', 'reorder-w
 
 // Virtualizace
 const containerRef = ref(null);
-const itemHeight = 96; // Výška jedné řady v gridu včetně mezery
-const columnsCount = ref(3); // Počet sloupců (bude se dynamicky upravovat)
-const visibleRows = ref(8); // Počet viditelných řad
+const itemHeight = 45; // Výška jedné položky
+const visibleCount = ref(10); // Počet viditelných položek
 const scrollTop = ref(0);
 
-// Vypočítané hodnoty pro virtualizaci s gridem
-const startRowIndex = computed(() => Math.floor(scrollTop.value / itemHeight));
-const endRowIndex = computed(() => startRowIndex.value + visibleRows.value);
-const startIndex = computed(() => startRowIndex.value * columnsCount.value);
-const endIndex = computed(() => Math.min(endRowIndex.value * columnsCount.value, props.words.length));
-const displayedWords = computed(() => props.words.slice(startIndex.value, endIndex.value));
+// Vypočítané hodnoty pro virtualizaci
+const startIndex = computed(() => {
+    const start = Math.floor(scrollTop.value / itemHeight);
+    return Math.max(0, Math.min(start, props.words.length - visibleCount.value));
+});
+const endIndex = computed(() => Math.min(startIndex.value + visibleCount.value, props.words.length));
+const displayedWords = computed(() => {
+    const start = startIndex.value;
+    const end = endIndex.value;
+    return props.words.slice(start, end);
+});
 
 // Lokální kopie pro drag & drop
 const localDisplayedWords = ref([]);
-const isDragDisabled = computed(() => false); // Drag je vždy povolený díky virtualizaci
+const isDragDisabled = computed(() => props.isSearching);
 
-// Sledování viděných slov
-const maxSeenIndex = ref(0);
-const seenWordsCount = computed(() => Math.min(maxSeenIndex.value + 1, props.words.length));
-const offsetY = computed(() => startRowIndex.value * itemHeight);
-const totalRows = computed(() => Math.ceil(props.words.length / columnsCount.value));
-const bottomSpacerHeight = computed(() => Math.max(0, (totalRows.value - endRowIndex.value) * itemHeight));
+const offsetY = computed(() => startIndex.value * itemHeight);
+const bottomSpacerHeight = computed(() => {
+    const remaining = props.words.length - endIndex.value;
+    return Math.max(0, remaining * itemHeight);
+});
 
 const handleScroll = event => {
     scrollTop.value = event.target.scrollTop;
-
-    // Aktualizovat počet viděných slov
-    const currentMaxIndex = endIndex.value - 1;
-    if (currentMaxIndex > maxSeenIndex.value) {
-        maxSeenIndex.value = currentMaxIndex;
-    }
 };
 
 const calculateVisibleCount = () => {
     if (containerRef.value) {
         const containerHeight = containerRef.value.clientHeight;
-        const containerWidth = containerRef.value.clientWidth;
-
-        // Dynamicky určit počet sloupců podle šířky
-        if (containerWidth >= 1280) {
-            columnsCount.value = 4;
-        } else if (containerWidth >= 1024) {
-            columnsCount.value = 3;
-        } else if (containerWidth >= 768) {
-            columnsCount.value = 2;
-        } else {
-            columnsCount.value = 1;
-        }
-
-        visibleRows.value = Math.ceil(containerHeight / itemHeight) + 2; // +2 pro buffer
+        visibleCount.value = Math.ceil(containerHeight / itemHeight) + 2; // +2 pro buffer
     }
 };
 
@@ -110,13 +95,11 @@ const handleEdit = (id, newText) => {
 };
 
 const handleDragStart = () => {
-    // Přidat třídu pro globální cursor
     document.body.classList.add('dragging');
     document.body.style.cursor = 'grabbing';
 };
 
 const handleDragEnd = event => {
-    // Odstranit třídu pro globální cursor
     document.body.classList.remove('dragging');
     document.body.style.cursor = '';
 
@@ -140,52 +123,29 @@ watch(
     },
     { immediate: true }
 );
-
-// Reset počítadla při změně seznamu slov
-watch(
-    () => props.words,
-    () => {
-        maxSeenIndex.value = Math.min(endIndex.value - 1, props.words.length - 1);
-    },
-    { immediate: true }
-);
 </script>
 
 <style scoped>
 .words-container {
-    max-height: calc(100vh - 300px);
+    max-height: calc(100vh - 350px);
     overflow-y: auto;
     position: relative;
 }
 
-.words-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
+.words-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     padding: 8px;
 }
 
-/* Responsivní grid pro různé velikosti obrazovky */
-@media (min-width: 768px) {
-    .words-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .words-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 1280px) {
-    .words-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
 .word-item {
-    min-height: 80px;
+    min-height: 40px;
+    cursor: grab;
+}
+
+.word-item:active {
+    cursor: grabbing !important;
 }
 
 .virtual-spacer {
@@ -219,24 +179,6 @@ watch(
     cursor: grabbing !important;
     z-index: 1001;
     position: relative;
-}
-
-/* Cursor styly pro drag */
-.words-grid .word-item {
-    cursor: grab;
-}
-
-.words-grid .word-item:active {
-    cursor: grabbing !important;
-}
-
-.words-grid[data-disabled='true'] .word-item {
-    cursor: default;
-}
-
-/* Jednoduché cursor pravidla */
-.words-grid .word-item:active {
-    cursor: grabbing !important;
 }
 
 body.dragging {
